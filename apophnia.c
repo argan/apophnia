@@ -77,6 +77,7 @@ struct {
 
   int 
     port,
+    no_store,
     log_fd,
     log_level;
 } g_opts;
@@ -100,6 +101,7 @@ struct {
   { "log_level", "Log Level", &g_opts.log_level, cJSON_Number },
   { "log_file", "Log File", &g_opts.log_fd, cJSON_String },
   { "404", "404 image", &g_opts.badfile_fd, cJSON_String },
+  { "tempfile_no_store", "Not to store generated file", &g_opts.no_store, cJSON_Number },
   { 0, 0, 0, 0 }
 };
 
