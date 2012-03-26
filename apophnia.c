@@ -78,6 +78,7 @@ struct {
   int 
     port,
     no_store,
+    max_age,
     log_fd,
     log_level;
 } g_opts;
@@ -102,6 +103,7 @@ struct {
   { "log_file", "Log File", &g_opts.log_fd, cJSON_String },
   { "404", "404 image", &g_opts.badfile_fd, cJSON_String },
   { "tempfile_no_store", "Not to store generated file", &g_opts.no_store, cJSON_Number },
+  { "max_age", "Cache Max-Age", &g_opts.max_age, cJSON_Number },
   { 0, 0, 0, 0 }
 };
 
@@ -494,6 +496,11 @@ void *show_image(
 
   struct stat st;
   size_t sz;
+  const char* rfc1123fmt = "%a, %d %b %Y %H:%M:%S GMT";
+  time_t now, mod, expires;
+  char nowbuf[100];
+  char modbuf[100];
+  char expbuf[100];
 
   if(event == MG_EVENT_LOG) {
     plog0("%s", request_info->log_message);
@@ -584,6 +591,19 @@ void *show_image(
     mg_printf(conn, "%s", "HTTP/1.1 200 OK\r\n");
     mg_printf(conn, "%s", "Content-Type: image/jpeg\r\n");
     mg_printf(conn, "%s", "Connection: Keep-Alive\r\n");
+    // add cache control headers
+    now = time( (time_t*) 0 );
+     (void) strftime( nowbuf, sizeof(nowbuf), rfc1123fmt, gmtime( &now ) );
+    mg_printf(conn, "Date: %s\r\n", nowbuf);
+    if (g_opts.max_age > 0) {
+      expires = now + g_opts.max_age;
+      mod = st.st_mtime;
+      (void) strftime( expbuf, sizeof(expbuf), rfc1123fmt, gmtime( &expires ) );
+      (void) strftime( modbuf, sizeof(modbuf), rfc1123fmt, gmtime( &mod ) );
+      mg_printf(conn, "Cache-Control: max-age=%d\r\n", g_opts.max_age );
+      mg_printf(conn, "Last-Modified: %s\r\n", modbuf);
+      mg_printf(conn, "Expires: %s\r\n", expbuf);
+    }
     // if this is the case then we have a command string to parse
     if(pCommand != commandList) {
       
