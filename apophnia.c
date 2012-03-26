@@ -639,7 +639,10 @@ void *show_image(
       image = image_end(wand, &sz);
       mg_printf(conn, "Content-Length: %d\r\n\r\n", sz);
       mg_write(conn, image, sz);
-      MagickWriteImage(wand, request_info->uri + 1);
+      if (g_opts.no_store == 0) {
+        // write the generated file 
+        MagickWriteImage(wand, request_info->uri + 1);
+      }
       MagickRelinquishMemory(image);
     } else {
       mg_printf(conn, "Content-Length: %d\r\n\r\n", st.st_size);
@@ -699,6 +702,8 @@ int read_config(){
 
   g_config = ptr = cJSON_Parse((const char*)config);
 
+  // some default values
+  g_opts.no_store = 0;
   g_opts.port = 2345;
   g_opts.log_level = 0;
 
