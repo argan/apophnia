@@ -58,6 +58,7 @@
 
 #define CONFIG        "apophnia.conf"
 #define BUFSIZE       16384
+#define SERVER_SIG    "apophnia 0.1"
 #define MAX_DIRECTIVES 16
 #define ASSERT_CHAR(ptr, chr) ((ptr[0] == chr) && ptr++)
 
@@ -291,6 +292,7 @@ void *do404(struct mg_connection *conn) {
   }
 
   mg_printf(conn, "%s", "HTTP/1.1 404 Not Found\n");
+  mg_printf(conn, "Server:%s\r\n", SERVER_SIG);
   mg_printf(conn, "%s", "Content-Type: image/png\n");
   if(len) {
     mg_printf(conn, "Content-Length: %d\n", len);
@@ -589,6 +591,7 @@ void *show_image(
     }
 
     mg_printf(conn, "%s", "HTTP/1.1 200 OK\r\n");
+    mg_printf(conn, "Server:%s\r\n", SERVER_SIG);
     mg_printf(conn, "%s", "Content-Type: image/jpeg\r\n");
     mg_printf(conn, "%s", "Connection: Keep-Alive\r\n");
     // add cache control headers
